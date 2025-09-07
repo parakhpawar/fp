@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Threat Meter</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      background: #21242B;
+      font-family: 'Segoe UI', 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #fff;
+    }
+    .container {
+      width: 95%;
+      max-width: 420px;
+      padding: 20px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.05);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      text-align: center;
+    }
+    .title {
+      color: #FF4747;
+      font-size: 2em;
+      font-weight: bold;
+      margin-bottom: 24px;
+    }
+    .meter-view {
+      width: 60px;
+      margin: 0 auto 20px auto;
+      display: flex;
+      flex-direction: column-reverse;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+    }
+    .bar {
+      width: 100%;
+      aspect-ratio: 1/1;
+      background: #E6E6E6;
+      border-radius: 6px;
+    }
+    .bar.active {
+      background: #FF4747;
+    }
+    .bar.safe {
+      background: #18cfc3;
+    }
+    .hazard-list {
+      margin-top: 20px;
+      text-align: left;
+    }
+    .hazard-item {
+      margin: 5px 0;
+      font-size: 1.1em;
+    }
+    .back-btn {
+      margin-top: 20px;
+      display: inline-block;
+      padding: 10px 16px;
+      border-radius: 8px;
+      background: #18cfc3;
+      color: #fff;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="title">THREAT METER</div>
+    <p id="message">Please allow location access to see the threat meter. <button id="allowBtn">Allow Location</button></p>
+    <div class="meter-view" id="meterView"></div>
+    <div class="hazard-list" id="hazardList"></div>
+    <a href="maindashboard.html" class="back-btn">⬅ Back</a>
+  </div>
+  <script>
+    const maxBars = 8;
+    const meterView = document.getElementById('meterView');
+    const hazardListDiv = document.getElementById('hazardList');
+    const message = document.getElementById('message');
+
+    // Generate consistent random hazards based on location
+    function generateHazards(lat, lng) {
+      const seed = Math.floor(lat * 10000) + Math.floor(lng * 10000);
+      let hazards = [];
+      const types = [
+        {type: "School Zone", weight: 1},
+        {type: "Pedestrian Crossing", weight: 2},
+        {type: "Accident", weight: 4},
+        {type: "Pothole", weight: 3},
+        {type: "Roadblock", weight: 5}
+      ];
+      for (let i = 0; i < 5; i++) {
+        // Generate offsets using seed for consistency
+        const latOffset = ((seed + i * 123) % 100 - 50) / 2000;
+        const lngOffset = ((seed + i * 456) % 100 - 50) / 2000;
+        hazards.push({
+          type: types[i].type,
+          weight: types[i].weight,
+          lat: lat + latOffset,
+          lng: lng + lngOffset
+        });
+      }
+      return hazards;
+    }
+
+    // Load hazards based on location
+    async function loadHazards(lat, lng) {
+      return generateHazards(lat, lng);
+    }
+
+    // Distance formula
+    function getDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) *
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+      return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+    }
+
+    function renderMeter(level) {
+      meterView.innerHTML = '';
+      for (let i = 1; i <= maxBars; i++) {
+        let bar = document.createElement('div');
+        bar.className = 'bar';
+        if (level === 0) {
+          bar.classList.add('safe');
+        } else if (level >= i) {
+          bar.classList.add('active');
+        }
+        meterView.appendChild(bar);
+      }
+    }
+
+    async function checkThreat(lat, lng) {
+      const hazards = await loadHazards(lat, lng);
+      let nearby = 0;
+      let details = [];
+
+      hazards.forEach(h => {
+        const dist = getDistance(lat, lng, h.lat, h.lng);
+        if (dist <= 2) {
+          nearby += h.weight;
+          details.push(`${h.type} (${dist.toFixed(1)} km away)`);
+        }
+      });
+
+      // Threat level = sum of weights of hazards nearby
+      renderMeter(Math.min(nearby, maxBars));
+
+      hazardListDiv.innerHTML = "<h3>Nearby Hazards:</h3>" +
+        (details.length ? details.map(d => `<div class="hazard-item">⚠️ ${d}</div>`).join('') : "<p>No hazards nearby</p>");
+    }
+
+    let currentLat = 19.0760;
+    let currentLng = 72.8777;
+    let threatLevel = 0;
+
+    async function startThreatMeter(lat, lng) {
+      message.style.display = 'none';
+      currentLat = lat;
+      currentLng = lng;
+
+      async function updateThreat() {
+        // Add small random offset to simulate movement
+        const latOffset = (Math.random() - 0.5) * 0.02; // ~2km variation
+        const lngOffset = (Math.random() - 0.5) * 0.02;
+        currentLat += latOffset;
+        currentLng += lngOffset;
+
+        // Calculate threat level based on hazards
+        const hazards = await loadHazards(currentLat, currentLng);
+        let nearby = 0;
+        hazards.forEach(h => {
+          const dist = getDistance(currentLat, currentLng, h.lat, h.lng);
+          if (dist <= 2) {
+            nearby += h.weight;
+          }
+        });
+        threatLevel = Math.min(nearby, maxBars);
+
+        // Render meter with updated threat level
+        renderMeter(threatLevel);
+
+        // Update hazard list based on current location
+        let details = [];
+        hazards.forEach(h => {
+          const dist = getDistance(currentLat, currentLng, h.lat, h.lng);
+          if (dist <= 2) {
+            details.push(`${h.type} (${dist.toFixed(1)} km away)`);
+          }
+        });
+        hazardListDiv.innerHTML = "<h3>Nearby Hazards:</h3>" +
+          (details.length ? details.map(d => `<div class="hazard-item">⚠️ ${d}</div>`).join('') : "<p>No hazards nearby</p>");
+      }
+
+      await updateThreat();
+      setInterval(updateThreat, 3000);
+    }
+
+    const allowBtn = document.getElementById('allowBtn');
+    allowBtn.addEventListener('click', () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            message.style.display = 'none';
+            startThreatMeter(pos.coords.latitude, pos.coords.longitude);
+          },
+          () => {
+            message.textContent = 'Location access denied. Unable to show threat meter.';
+          }
+        );
+      } else {
+        message.textContent = 'Geolocation is not supported by your browser.';
+      }
+    });
+  </script>
+</body>
+</html>

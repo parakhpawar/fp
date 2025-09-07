@@ -1,0 +1,6 @@
+[
+  { "type": "Flood", "lat": 19.0800, "lng": 72.8800 },
+  { "type": "Accident", "lat": 19.0765, "lng": 72.8780 },
+  { "type": "Pothole", "lat": 19.0820, "lng": 72.8850 },
+  { "type": "Roadblock", "lat": 19.0750, "lng": 72.8830 }
+]

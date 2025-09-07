@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Report Hazard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      background: #21242B;
+      font-family: 'Segoe UI', 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #fff;
+    }
+    .container {
+      width: 95%;
+      max-width: 480px;
+      padding: 20px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.05);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      text-align: center;
+    }
+    .title {
+      color: #FF4747;
+      font-size: 2em;
+      font-weight: bold;
+      margin-bottom: 24px;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      text-align: left;
+    }
+    label {
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    input[type="text"], select, textarea {
+      width: 100%;
+      padding: 8px;
+      border-radius: 6px;
+      border: none;
+      font-size: 1em;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    button {
+      background: #FF4747;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #e03e3e;
+    }
+    .back-btn {
+      margin-top: 20px;
+      display: inline-block;
+      padding: 10px 16px;
+      border-radius: 8px;
+      background: #18cfc3;
+      color: #fff;
+      text-decoration: none;
+      text-align: center;
+    }
+    .success-message {
+      color: #18cfc3;
+      font-weight: bold;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="title">REPORT HAZARD</div>
+    <form id="hazardForm">
+      <label for="type">Hazard Type</label>
+      <select id="type" name="type" required>
+        <option value="">Select hazard type</option>
+        <option value="School Zone">School Zone</option>
+        <option value="Pedestrian Crossing">Pedestrian Crossing</option>
+        <option value="Accident">Accident</option>
+        <option value="Pothole">Pothole</option>
+        <option value="Roadblock">Roadblock</option>
+      </select>
+
+      <label for="location">Location Description</label>
+      <input type="text" id="location" name="location" placeholder="Enter location details" required />
+
+      <label for="details">Additional Details</label>
+      <textarea id="details" name="details" placeholder="Provide any additional information"></textarea>
+
+      <button type="submit">Submit Report</button>
+    </form>
+    <div id="successMessage" class="success-message" style="display:none;">Thank you for reporting the hazard.</div>
+    <a href="maindashboard.html" class="back-btn">⬅ Back</a>
+  </div>
+  <script>
+    const form = document.getElementById('hazardForm');
+    const successMessage = document.getElementById('successMessage');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      // Here you would normally send the data to a backend service
+      // For now, just show success message and reset form
+      successMessage.style.display = 'block';
+      form.reset();
+    });
+  </script>
+</body>
+</html>
